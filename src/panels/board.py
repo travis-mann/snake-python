@@ -25,6 +25,7 @@ class Board:
                  length: int):
         # attr from params
         self.tile_count = tile_count
+        self.length = length
 
         # create new surface
         self.board = pygame.Surface((length, length))
@@ -40,15 +41,21 @@ class Board:
         # generate tile list
         self.tiles = [Vector2(column_idx, row_idx) for row_idx in range(tile_count) for column_idx in range(tile_count)]
 
-    def draw(self, screen: pygame.display):
+    def draw(self) -> None:
         """
-        purpose: draw background
+        purpose: draw board design and tiles
         """
         # draw tiles
         self.draw_tiles()
 
-        # place board on screen
-        screen.blit(self.board, screen.get_rect().center)
+    def show(self, screen: pygame.display) -> None:
+        """
+        purpose: show board on a screen, should be done after everything else is drawn to the board
+        """
+        # blit board to the screen
+        board_x_position = int(screen.get_width() / 2 - self.length / 2)
+        board_y_position = int(screen.get_height() / 2 - self.length / 2)
+        screen.blit(self.board, (board_x_position, board_y_position))
 
     def draw_tiles(self) -> None:
         """
@@ -81,9 +88,23 @@ if __name__ == "__main__":
     pygame.init()
     # create screen
     screen = pygame.display.set_mode((1000, 1000))
+    pos = int(screen.get_height()/2)
     # create board
-    board = Board(11, 500)
+    board = Board(11, pos)
     # game loop
+    print('starting game loop')
     running = True
     while running:
-        board.draw(screen)
+        # handle quit
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        # add delay between loops
+        pygame.time.delay(50)
+        board.draw()
+        pygame.draw.rect(board.board, (255, 0, 0), (0, 0, 50, 50))
+        board.show(screen)
+        pygame.display.flip()
+
+    # quit when game loop exited
+    pygame.quit()
