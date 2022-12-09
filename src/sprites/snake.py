@@ -20,11 +20,14 @@ class Snake:
     """
     purpose: player controlled snake object
     """
-    def __init__(self, segment_size: int):
-        self.segment_positions = [Vector2(0, 0), Vector2(0, 1), Vector2(0, 2)]
+    def __init__(self, segment_size: int,
+                 segment_positions: list,
+                 starting_direction: Vector2):
+        self.segment_positions = segment_positions
         self.segment_size = segment_size
-        self.direction = Vector2(1, 0)
+        self.direction = starting_direction
         self.grow = False  # used to queue growth on next move
+        self.vertical_head_image = pygame.transform.scale(pygame.image.load('./img/snake1/vertical_snake_head.png'), (segment_size, segment_size))
 
         # color
         self.color = [0, 0, 255]
@@ -43,7 +46,11 @@ class Snake:
             segment = pygame.Rect(x_position, y_position, self.segment_size, self.segment_size)
             segment_color = (self.color[0], self.color[1],
                              max(0, self.color[2] - idx * 5))
-            pygame.draw.rect(screen, segment_color, segment)
+            if idx == 0:
+                rect = self.vertical_head_image.get_rect()
+                screen.blit(self.vertical_head_image, segment)
+            else:
+                pygame.draw.rect(screen, segment_color, segment)
 
     def move(self):
         """

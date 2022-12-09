@@ -16,44 +16,39 @@ from pygame.math import Vector2
 
 
 # --- classes ---
-class Background:
+class Board:
     """
-    purpose: background tiles and border for snake game
+    purpose: main playing board to place items and snake on
     """
-
-    def __init__(self, screen: pygame.display, tile_count: int):
+    def __init__(self,
+                 tile_count: int,
+                 length: int):
         # attr from params
-        self.screen = screen
         self.tile_count = tile_count
 
         # create new surface
-        self.board = pygame.surface.set
+        self.board = pygame.Surface((length, length))
+        self.board_rect = self.board.get_rect()
 
         # colors
-        self.background_color = (0, 50, 0)  # rgb
         self.tile_colors = ((0, 100, 0), (0, 200, 0))
 
-        # other attr
-        self.border_percent = 10
-        self.border_thickness = self.screen.get_width() * self.border_percent / 100
-        self.tile_size = (self.screen.get_width() - self.border_thickness * 2) / self.tile_count
-
+        # tiles
+        self.tile_size = int(length / self.tile_count)
         # adjust border thickness and tile_size so that the tiles are ints
-        self.border_thickness += (self.tile_size - int(self.tile_size)) / 2 * self.tile_count
         self.tile_size = int(self.tile_size)
-
         # generate tile list
         self.tiles = [Vector2(column_idx, row_idx) for row_idx in range(tile_count) for column_idx in range(tile_count)]
 
-    def draw(self):
+    def draw(self, screen: pygame.display):
         """
         purpose: draw background
         """
-        # fill background
-        self.screen.fill(self.background_color)
-
         # draw tiles
         self.draw_tiles()
+
+        # place board on screen
+        screen.blit(self.board, screen.get_rect().center)
 
     def draw_tiles(self) -> None:
         """
@@ -70,16 +65,25 @@ class Background:
                     tile_color = self.tile_colors[1]
 
                 # get tile position
-                tile_position_x = self.border_thickness + tile_col_idx * self.tile_size
-                tile_position_y = self.border_thickness + tile_row_idx * self.tile_size
+                tile_position_x = tile_col_idx * self.tile_size
+                tile_position_y = tile_row_idx * self.tile_size
 
                 # draw tile
-                pygame.draw.rect(self.screen, tile_color,
+                pygame.draw.rect(self.board, tile_color,
                                  (tile_position_x, tile_position_y, self.tile_size, self.tile_size))
 
                 # inc counter
                 tile_counter += 1
 
 
-
-
+# test
+if __name__ == "__main__":
+    pygame.init()
+    # create screen
+    screen = pygame.display.set_mode((1000, 1000))
+    # create board
+    board = Board(11, 500)
+    # game loop
+    running = True
+    while running:
+        board.draw(screen)

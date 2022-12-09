@@ -16,8 +16,8 @@ from pygame.math import Vector2
 from random import randint
 
 from src.background import Background
-from src.snake import Snake
-from src.fruit import Fruit
+from src.sprites.snake import Snake
+from src.sprites.fruit import Fruit
 
 
 # --- funcs ---
@@ -41,9 +41,19 @@ class SnakeGame:
 
         # main game objects
         self.background = Background(self.screen, tile_count)
-        self.snake = Snake(self.background.tile_size)
+        self.snake_starting_position = [Vector2(3, self.background.tile_count/2+0.5),
+                                        Vector2(2, self.background.tile_count/2+0.5),
+                                        Vector2(1, self.background.tile_count/2+0.5)]  # to reset to on loss
+        self.snake_starting_direction = Vector2(1, 0)
+        self.snake = Snake(self.background.tile_size,
+                           self.snake_starting_position,
+                           self.snake_starting_direction)
         self.previous_direction = self.snake.direction  # stores direction for pausing game
-        self.fruits = [Fruit(self.background.tile_size/2.5) for i in range(fruit_count)]
+        self.fruits = pygame.sprite.Group()
+        # add specified number of fruits
+        for i in range(fruit_count):
+            self.fruits.add(Fruit(self.background.tile_size,
+                                  './img/peach.png'))
 
         # basic game attributes
         self.score = 0
@@ -102,8 +112,10 @@ class SnakeGame:
         # draw objects
         self.background.draw()
         self.snake.draw(self.screen, self.background.border_thickness)
-        for fruit in self.fruits:
-            fruit.draw(self.screen, self.background.tile_size, self.background.border_thickness)
+        self.fruits.draw(self.screen)
+        self.fruits.update(Vector2(self.background.border_thickness,
+                                   self.background.border_thickness),
+                           self.background.tile_size)
 
         # update screen
         pygame.display.update()
@@ -146,8 +158,18 @@ class SnakeGame:
                     self.snake.grow = True
 
             # check for loss
-            if self.snake.colliding:
+            if any([self.snake.colliding, # check if snake is self colliding
+                    # check if snake off board
+                    self.snake.segment_positions[0].x < 0,
+                    self.snake.segment_positions[0].y < 0,
+                    self.snake.segment_positions[0].x > self.background.tile_count - 1,
+                    self.snake.segment_positions[0].y > self.background.tile_count - 1
+                    ]):
                 print('you lose!')
+                self.snake.segment_positions = self.snake_starting_position
+                self.snake.direction = Vector2(1, 0)
+                # pause game
+                self.paused = True
 
         else:  # pause menu updates
             pass  # todo, separate object
@@ -221,6 +243,6 @@ class SnakeGame:
 
 # --- main ---
 if __name__ == "__main__":
-    SG = SnakeGame(fruit_count=2,
+    SG = SnakeGame(fruit_count=10,
                    tile_count=17)
     SG.run()
