@@ -14,32 +14,38 @@ __status__ = "Production"
 import pygame
 from pygame.math import Vector2
 
+from src.panels.panel import Panel
+
 
 # --- classes ---
-class Board:
+class Board(Panel):
     """
     purpose: main playing board to place items and snake on
     """
     def __init__(self,
                  tile_count: int,
-                 length: int):
+                 size: Vector2,
+                 position: Vector2):
         # attr from params
         self.tile_count = tile_count
-        self.length = length
-
-        # create new surface
-        self.board = pygame.Surface((length, length))
-        self.board_rect = self.board.get_rect()
+        print(f'board init pos: {position.x}, {position.y}')
 
         # colors
-        self.tile_colors = ((0, 100, 0), (0, 200, 0))
+        self.tile_colors = ((125, 200, 75),
+                            (125, 210, 75))
 
         # tiles
-        self.tile_size = int(length / self.tile_count)
-        # adjust border thickness and tile_size so that the tiles are ints
+        self.tile_size = int(size.x / self.tile_count)
+        # adjust size and tile_size so that the tiles are ints
         self.tile_size = int(self.tile_size)
+        adjusted_length = self.tile_size * tile_count
+        self.size = Vector2(adjusted_length, adjusted_length)
         # generate tile list
         self.tiles = [Vector2(column_idx, row_idx) for row_idx in range(tile_count) for column_idx in range(tile_count)]
+
+        # init parent Panel class
+        super().__init__(size=self.size,
+                         position=position)
 
     def draw(self) -> None:
         """
@@ -47,15 +53,6 @@ class Board:
         """
         # draw tiles
         self.draw_tiles()
-
-    def show(self, screen: pygame.display) -> None:
-        """
-        purpose: show board on a screen, should be done after everything else is drawn to the board
-        """
-        # blit board to the screen
-        board_x_position = int(screen.get_width() / 2 - self.length / 2)
-        board_y_position = int(screen.get_height() / 2 - self.length / 2)
-        screen.blit(self.board, (board_x_position, board_y_position))
 
     def draw_tiles(self) -> None:
         """
@@ -76,21 +73,23 @@ class Board:
                 tile_position_y = tile_row_idx * self.tile_size
 
                 # draw tile
-                pygame.draw.rect(self.board, tile_color,
+                pygame.draw.rect(self.surface, tile_color,
                                  (tile_position_x, tile_position_y, self.tile_size, self.tile_size))
 
                 # inc counter
                 tile_counter += 1
 
 
-# test
+# --- test ---
 if __name__ == "__main__":
     pygame.init()
     # create screen
     screen = pygame.display.set_mode((1000, 1000))
-    pos = int(screen.get_height()/2)
+    length = int(screen.get_width()/2)
     # create board
-    board = Board(11, pos)
+    board = Board(11,
+                  Vector2(length, length),
+                  Vector2(screen.get_rect().center))
     # game loop
     print('starting game loop')
     running = True
@@ -102,7 +101,7 @@ if __name__ == "__main__":
         # add delay between loops
         pygame.time.delay(50)
         board.draw()
-        pygame.draw.rect(board.board, (255, 0, 0), (0, 0, 50, 50))
+        pygame.draw.rect(board.surface, (255, 0, 0), (0, 0, 50, 50))
         board.show(screen)
         pygame.display.flip()
 

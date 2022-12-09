@@ -26,8 +26,10 @@ class Snake:
         self.segment_positions = segment_positions
         self.segment_size = segment_size
         self.direction = starting_direction
-        self.grow = False  # used to queue growth on next move
-        self.vertical_head_image = pygame.transform.scale(pygame.image.load('./img/snake1/vertical_snake_head.png'), (segment_size, segment_size))
+        self.next_direction = starting_direction  # direction to load on next move
+        self.grow = True  # used to queue growth on next move
+        self.vertical_head_image = pygame.transform.scale(pygame.image.load('./img/snake1/vertical_snake_head.png'),
+                                                          (segment_size, segment_size))
 
         # color
         self.color = [0, 0, 255]
@@ -35,22 +37,21 @@ class Snake:
         # track self collision
         self.colliding = False
 
-    def draw(self, screen, border_thickness: int) -> None:
+    def draw(self, board) -> None:
         """
         purpose: draw snake on the screen
         """
         # draw each segment
         for idx, segment_position in enumerate(self.segment_positions):
-            x_position = int(segment_position.x * self.segment_size) + border_thickness
-            y_position = int(segment_position.y * self.segment_size) + border_thickness
+            x_position = int(segment_position.x * self.segment_size)
+            y_position = int(segment_position.y * self.segment_size)
             segment = pygame.Rect(x_position, y_position, self.segment_size, self.segment_size)
             segment_color = (self.color[0], self.color[1],
                              max(0, self.color[2] - idx * 5))
             if idx == 0:
-                rect = self.vertical_head_image.get_rect()
-                screen.blit(self.vertical_head_image, segment)
+                board.blit(self.vertical_head_image, segment)
             else:
-                pygame.draw.rect(screen, segment_color, segment)
+                pygame.draw.rect(board, segment_color, segment)
 
     def move(self):
         """
@@ -62,6 +63,7 @@ class Snake:
         else:  # copy all but last segment
             new_segment_positions = self.segment_positions[:-1]
         # insert new front segment based on current direction
+        self.direction = self.next_direction  # update current direction
         new_segment_positions.insert(0, new_segment_positions[0] + self.direction)
 
         # check for collision
@@ -73,4 +75,12 @@ class Snake:
         # update segment positions
         self.segment_positions = new_segment_positions
 
+
+# --- func ---
+def rotate_image():
+    """
+    purpose: rotates an image about its center
+    :return: 
+    """
+    pass
 
