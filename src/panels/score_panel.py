@@ -37,12 +37,10 @@ class ScorePanel(Panel):
         self.font = pygame.font.Font('freesansbold.ttf', int(self.size.y * 0.4))
 
         # place fruit icon
-        self.fruit_image = pygame.transform.scale(pygame.image.load('./img/peach.png'),
+        self.fruit_image = pygame.transform.scale(pygame.image.load('./img/fruit/peach.png'),
                                                   (self.size.y * 0.4, self.size.y * 0.4))
         self.fruit_rect = self.fruit_image.get_rect()
         self.fruit_rect.center = (self.size.x * 0.09, self.size.y * 0.5)
-
-
 
     def draw(self):
         """
@@ -71,6 +69,7 @@ if __name__ == "__main__":
     score_panel = ScorePanel(Vector2(screen.get_width(), screen.get_height() * 0.1),
                              Vector2(screen.get_width()/2, 0), color=(0, 50, 0))
     score_panel.position_on = 'midtop'
+
     # game loop
     print('starting game loop')
     running = True

@@ -36,7 +36,7 @@ class Fruit(pygame.sprite.Sprite):
         self.side_length = side_length
 
         # animation sizes
-        self.grow_rate = 0.005
+        self.grow_direction = 1  # positive or negative tto indicate growing vs shrinking
         self.max_size_ratio = 1.1
         self.min_size_ratio = 0.9
         self.growing = True
@@ -56,17 +56,32 @@ class Fruit(pygame.sprite.Sprite):
 
     def pulse(self) -> None:
         """
-        purpose: add pulsing animation to fruit
+        purpose: add pulsing animation to fruit, speed based on a parabola
         """
-        # swap grow direction if too small or too big
+        # get current growth ratio & grow rate
         size_ratio = self.side_length / self.base_side_length
+        grow_rate = self.get_growth_rate_magnitude(size_ratio)
+
+        # swap grow direction if too small or too big
         if size_ratio >= self.max_size_ratio or size_ratio <= self.min_size_ratio:
-            self.grow_rate = - self.grow_rate
+            self.grow_direction = - self.grow_direction
 
         # apply growth rate
-        self.side_length += self.grow_rate * self.base_side_length
+        self.side_length += grow_rate * self.grow_direction * self.base_side_length
 
         # update image size
         self.image = pygame.image.load(self.image_fl)
         self.image = pygame.transform.scale(self.image, (self.side_length, self.side_length))  # scale image
+
+    def get_growth_rate_magnitude(self, size_ratio):
+        """
+        purpose: determine growth rate based on a parabola so it slows as it approaches max size
+        """
+        magnification_factor = 1.2
+        min_growth_rate = 0.006
+        # parabola equation
+        magnitude = magnification_factor * (size_ratio - self.max_size_ratio)**2 + min_growth_rate
+        return magnitude
+
+
 

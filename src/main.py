@@ -14,9 +14,11 @@ __status__ = "Production"
 import pygame
 from pygame.math import Vector2
 from random import randint
+from pygame import mixer
 
 from src.panels.board import Board
 from src.panels.score_panel import ScorePanel
+from src.panels.pause_menu import PauseMenu
 from src.sprites.snake import Snake
 from src.sprites.fruit import Fruit
 
@@ -36,12 +38,12 @@ class SnakeGame:
         # initialize pygame
         print('starting pygame...')
         pygame.init()
+        pygame.mixer.init()
 
         # create screen
         self.screen = pygame.display.set_mode((600, 675))
-        self.screen.fill((0, 100, 0))  # color background green
 
-        # main game objects
+        # various panels
         board_length = int(self.screen.get_width() * 0.9)
         border_size = (self.screen.get_width() - board_length) / 2
         # center board under score panel
@@ -51,6 +53,11 @@ class SnakeGame:
                                             self.screen.get_height() - border_size))
         self.board.position_on = 'midbottom'  # position based on midbottom of board
 
+        # pause menu
+        self.pause_menu = PauseMenu(size=Vector2(self.screen.get_width() * 0.5, self.screen.get_height() * 0.7),
+                                    position=Vector2(self.screen.get_rect().center[0], self.screen.get_rect().center[0]),
+                                    color=(200, 200, 200))
+
         # center score panel along the top
         self.score_panel = ScorePanel(size=Vector2(self.screen.get_width(),
                                                    self.screen.get_height() - board_length - border_size * 2),
@@ -58,6 +65,7 @@ class SnakeGame:
                                       color=(0, 50, 0))
         self.score_panel.position_on = 'topleft'
 
+        # main game objects
         self.snake_starting_position = [Vector2(3, self.board.tile_count/2+0.5),
                                         Vector2(2, self.board.tile_count/2+0.5),
                                         Vector2(1, self.board.tile_count/2+0.5)]  # to reset to on loss
@@ -65,12 +73,11 @@ class SnakeGame:
         self.snake = Snake(self.board.tile_size,
                            self.snake_starting_position,
                            self.snake_starting_direction)
-        self.previous_direction = self.snake.direction  # stores direction for pausing game
         self.fruits = pygame.sprite.Group()
         # add specified number of fruits
         for i in range(fruit_count):
             self.fruits.add(Fruit(self.board.tile_size * 1.1,
-                                  './img/peach.png'))
+                                  './img/fruit/peach.png'))
 
         # basic game attributes
         self.paused = False
@@ -93,6 +100,10 @@ class SnakeGame:
         """
         # create pygame clock to set game tick
         clock = pygame.time.Clock()
+
+        # play background music loop
+        # mixer.music.load('./sound/walking.wav')
+        # mixer.music.play(-1)
 
         # execute continuous game loop
         while self.running:
@@ -128,6 +139,35 @@ class SnakeGame:
         """
         purpose: update background and objects based on changes from last loop
         """
+        # branch between pause menu and running game
+        if self.paused:
+            self.pause_menu.draw()
+            self.pause_menu.show(self.screen)
+            # handle continue
+            if self.pause_menu.continue_button.pressed:
+                # reset continue button for next click
+                self.pause_menu.continue_button.pressed = False
+                # cycle game pause state
+                self.paused = not self.paused
+            # handle quit
+            if self.pause_menu.quit_button.pressed:
+                # reset quit button for next click
+                self.pause_menu.quit_button.pressed = False
+                # cycle game pause state
+                self.running = False
+        else:
+            self.draw_scene_running()
+
+        # update screen
+        pygame.display.update()
+
+    def draw_scene_running(self):
+        """
+        purpose: draw the scene when the game is running
+        """
+        # fill background
+        self.screen.fill((0, 100, 0))  # color background green
+
         # draw objects
         self.score_panel.draw()
         self.board.draw()
@@ -138,9 +178,6 @@ class SnakeGame:
         # show panels
         self.score_panel.show(self.screen)
         self.board.show(self.screen)
-
-        # update screen
-        pygame.display.update()
 
     def get_input(self) -> None:
         """
@@ -163,7 +200,6 @@ class SnakeGame:
         """
         purpose: update objects on screen
         """
-
         # game updates
         self.snake.move()
         # eat fruit if snake on fruit
@@ -195,20 +231,6 @@ class SnakeGame:
             # pause game
             self.paused = True
 
-    def pause_game(self):
-        """
-        purpose: pause game
-        """
-        if self.paused:
-            print('game unpaused')
-            self.snake.direction = self.previous_direction  # start snake
-            self.paused = False
-        else:
-            print('game paused')
-            self.previous_direction = self.snake.direction
-            self.snake.direction = Vector2(0, 0)  # stop snake
-            self.paused = True
-
     def handle_events(self) -> None:
         """
         purpose: high left logic for responding to events
@@ -227,7 +249,7 @@ class SnakeGame:
             # handle game pause
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
-                    self.pause_game()
+                    self.paused = not self.paused
 
     def get_open_tiles(self) -> [Vector2]:
         """

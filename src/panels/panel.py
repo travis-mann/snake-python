@@ -34,10 +34,11 @@ class Panel:
 
         # main surface
         self.surface = pygame.Surface((size.x, size.y))
+        self.surface_rect = self.surface.get_rect()
 
     def draw(self) -> None:
         """
-        purpose: draw panel
+        purpose: draw panel, to be replaced with more complex draw methods when extended
         """
         print('drawing panel')
         self.surface.fill(self.color)
@@ -46,9 +47,11 @@ class Panel:
         """
         purpose: show board on a screen, should be done after everything else is drawn to the board
         """
-        # draw surface to screen, centered on position by default
+        # draw surface to screen, centered position by default
         surface_rect_kwargs = {self.position_on: self.position}
-        screen.blit(self.surface, self.surface.get_rect(**surface_rect_kwargs))
+        self.surface_rect = self.surface.get_rect(**surface_rect_kwargs)
+        screen.blit(self.surface, self.surface_rect)
+
 
 
 # --- test ---
