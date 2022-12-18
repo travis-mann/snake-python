@@ -35,11 +35,13 @@ class Snake:
         self.l = pygame.transform.scale(pygame.image.load('./img/snake1/l.png'), (segment_size, segment_size))
         self.tail = pygame.transform.scale(pygame.image.load('./img/snake1/tail.png'), (segment_size, segment_size))
 
-        # color
-        self.color = [0, 0, 255]
-
         # track self collision
         self.colliding = False
+
+        # track smooth slithering
+        self.offset = 0
+        self.offset_speed = 0.1
+
 
     def draw(self, board) -> None:
         """
@@ -49,37 +51,82 @@ class Snake:
         for idx, segment_position in enumerate(self.segment_positions):
             x_position = int(segment_position.x * self.segment_size)
             y_position = int(segment_position.y * self.segment_size)
+
+
+            # add smooth slither to head and tail
+            if idx == 0:  # head
+                x_position += self.direction.x * self.offset * self.segment_size
+                y_position += self.direction.y * self.offset * self.segment_size
+            elif idx == len(self.segment_positions) - 1:  # tail
+                last_segment_position = self.segment_positions[idx - 1] - self.segment_positions[idx]
+                x_position += last_segment_position.x * self.offset * self.segment_size
+                y_position += last_segment_position.y * self.offset * self.segment_size
+
+
+            # draw segment
             segment = pygame.Rect(x_position, y_position, self.segment_size, self.segment_size)
             part = self.get_part(idx)
             board.blit(part, segment)
+
+            # telescope neck to connect stationary body to moving head
+            if idx == 1:
+                x_position += self.direction.x * self.offset * self.segment_size
+                y_position += self.direction.y * self.offset * self.segment_size
+                segment = pygame.Rect(x_position, y_position, self.segment_size, self.segment_size)
+                part = self.get_part(idx)
+                board.blit(part, segment)
+            # telescope tail to connect stationary body to moving tail
+            if idx == len(self.segment_positions) - 2:
+                x_position += self.direction.x * self.offset * self.segment_size
+                y_position += self.direction.y * self.offset * self.segment_size
+                segment = pygame.Rect(x_position, y_position, self.segment_size, self.segment_size)
+                part = self.get_part(idx)
+                board.blit(part, segment)
 
 
     def move(self):
         """
         purpose: move snake between tiles
         """
-        if self.grow:  # copy all segments
-            new_segment_positions = self.segment_positions[:]
-            self.grow = False
-        else:  # copy all but last segment
-            new_segment_positions = self.segment_positions[:-1]
-        # insert new front segment based on current direction
-        self.direction = self.next_direction  # update current direction
-        new_segment_positions.insert(0, new_segment_positions[0] + self.direction)
 
-        # check for collision
-        if new_segment_positions[0] in self.segment_positions:
-            self.colliding = True
+        # check if movement between tiles is occuring
+        # accept new movement if near center of tile
+        if self.offset >= 0.3:
+            # reset offset
+            self.offset = -0.4
+
+            # check for and handle growth
+            if self.grow:  # copy all segments
+                new_segment_positions = self.segment_positions[:]
+                self.grow = False
+            else:  # copy all but last segment
+                new_segment_positions = self.segment_positions[:-1]
+
+            # insert new front segment based on current direction
+            self.direction = self.next_direction  # update current direction
+            new_segment_positions.insert(0, new_segment_positions[0] + self.direction)
+
+            # check for collision
+            if new_segment_positions[0] in self.segment_positions:
+                print(f'new segment positions: {new_segment_positions}')
+                self.colliding = True
+            else:
+                self.colliding = False
+
+            # update segment positions
+            self.segment_positions = new_segment_positions
+
+            # prep next move to be a slither
+            self.slither = True
+
         else:
-            self.colliding = False
+            # increase offset by speed
+            self.offset += self.offset_speed
 
-        # update segment positions
-        self.segment_positions = new_segment_positions
-
-    def get_part(self, idx):
+    def get_part(self, idx: int):
         """
         purpose: get proper image to draw for a given segment
-        :return :
+        :return part: image for snake part correctly rotated
         """
         # get head
         if idx == 0:
@@ -147,13 +194,4 @@ class Snake:
 
         # output
         return rotated_part
-
-
-# --- func ---
-def rotate_image():
-    """
-    purpose: rotates an image about its center
-    :return: 
-    """
-    pass
 

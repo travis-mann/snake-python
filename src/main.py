@@ -85,7 +85,7 @@ class SnakeGame:
 
         # time
         self.loop_delay = 50
-        self.update_objects_delay = 150
+        self.update_objects_delay = 20
 
         # events
         self.update_objects_event = pygame.USEREVENT
@@ -157,6 +157,8 @@ class SnakeGame:
                 self.running = False
         else:
             self.draw_scene_running()
+            # debug data
+            self.show_debug_info()
 
         # update screen
         pygame.display.update()
@@ -224,7 +226,8 @@ class SnakeGame:
             print('you lose!')
             # reset snake
             self.snake.segment_positions = self.snake_starting_position
-            self.snake.direction = self.snake.next_direction = Vector2(1, 0)
+            self.snake.direction = Vector2(1, 0)
+            self.snake.next_direction = Vector2(1, 0)
             self.snake.grow = True
             # reset score
             self.score_panel.score = 0
@@ -284,6 +287,26 @@ class SnakeGame:
         else:  # no open tiles left, remove fruit
             print('no open tiles left, removing fruit')
             self.fruits.remove(fruit)
+
+    def show_debug_info(self):
+        """
+        purpose: add stats for debugging
+        """
+        font_size = 15
+        font = pygame.font.Font('freesansbold.ttf', font_size)
+        data = {'position': self.snake.segment_positions[0:2],
+                'head offset': self.snake.offset,
+                'next direction': self.snake.next_direction,
+                'tail position': self.snake.segment_positions[-2:],
+                'snake colliding?': self.snake.colliding
+                }
+        idx = 0
+        for label, value in data.items():
+            text = font.render(f'{label}: {value}', True, (255, 255, 255))
+            text_rect = text.get_rect()
+            text_rect.y += idx * font_size
+            self.screen.blit(text, text_rect)
+            idx += 1
 
 
 # --- main ---
